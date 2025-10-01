@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal Q&A Interactive</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style> html, body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+* { margin:0; padding:0; box-sizing:border-box; font-family:"Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+
+/* Header */
+header {
+  background:#2e3a59;
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 30px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+header .logo { font-size:22px; font-weight:bold; display:flex; align-items:center; gap:8px; }
+header nav a { color:white; margin-left:20px; text-decoration:none; font-weight:500; }
+header nav a:hover { color:#ffd43b; }
+
+/* Layout */
+main {
+  display:flex;
+  flex:1;
+  overflow:hidden;
+  position: relative;
+}
+
+/* Sidebar */
+#sidebarToggle { cursor:pointer; font-size:20px; margin-right:12px; }
+
+#historySidebar {
+  width:250px;
+  max-height:100%;
+  overflow-y:auto;
+  background:#f5f5f5;
+  padding:15px;
+  border-right:1px solid #ddd;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+#historySidebar.collapsed {
+  margin-left: -250px;
+}
+
+#historySidebar h3 { color:#2e3a59; margin-bottom:10px; }
+.history-item {
+  padding:8px;
+  margin-bottom:6px;
+  background:white;
+  border-radius:5px;
+  cursor:pointer;
+  transition:0.3s;
+}
+.history-item:hover { background:#e6f0ff; }
+
+/* Content Area */
+#contentArea {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px;
+  overflow-y:auto;
+  transition: all 0.3s ease;
+}
+
+/* shift content when sidebar open */
+#historySidebar:not(.collapsed) ~ #contentArea {
+  margin-left: 250px;
+}
+
+/* Question Section (Collapsible) */
+.question-section {
+  width:100%;
+  max-width:700px;
+  background:#f9f9f9;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom:20px;
+  transition:0.3s ease;
+}
+.question-header { display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+.question-header h2 { color:#2e3a59; }
+.question-header i { font-size:18px; transition:transform 0.3s; }
+.question-section.collapsed form { display:none; }
+.question-section.collapsed .question-header i { transform:rotate(-90deg); }
+.question-section form { display:flex; gap:10px; flex-wrap:wrap; margin-top:15px; }
+.question-section input {
+  flex:1;
+  padding:12px;
+  border:1px solid #ccc;
+  border-radius:6px;
+  outline:none;
+  min-width:150px;
+}
+.question-section button {
+  background:#2e3a59;
+  color:white;
+  border:none;
+  padding:12px 18px;
+  cursor:pointer;
+  border-radius:6px;
+  font-size:15px;
+}
+.question-section button:hover { background:#44507a; }
+
+/* Answer Section */
+.answer-section {
+  width:100%;
+  max-width:900px;
+  display:flex;
+  flex-direction:column;
+  gap:20px;
+}
+.card {
+  background:white;
+  border-radius:10px;
+  box-shadow:0 3px 12px rgba(0,0,0,0.1);
+  padding:20px;
+  position:relative;
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity 0.5s ease, transform 0.5s ease;
+}
+.card.show { opacity:1; transform:translateY(0); }
+.card h3 { margin-bottom:10px; color:#2e3a59; }
+.card .content { max-height:400px; overflow:auto; }
+.suggestion ul { padding-left:18px; margin:6px 0; }
+.suggestion li { margin:6px 0; }
+.small-muted { font-size:0.9em; color:#333; margin-top:6px; }
+
+/* Spinner Overlay */
+#loadingOverlay {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.4);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+  display:none;
+  flex-direction:column;
+  color:white;
+  font-size:18px;
+}
+#loadingOverlay .spinner {
+  font-size:36px;
+  animation:spin 1s linear infinite;
+  margin-bottom:15px;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Footer */
+footer {
+  text-align:center;
+  padding:15px;
+  background:#2e3a59;
+  color:white;
+  margin-top:auto;
+}
+
+/* 🔹 Mobile Responsive */
+@media (max-width: 768px) {
+  #historySidebar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 1000;
+  }
+  #historySidebar.collapsed {
+    margin-left: -250px;
+  }
+  #historySidebar:not(.collapsed) ~ #contentArea {
+    margin-left: 0; /* overlay mode, don’t push content */
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <i id="sidebarToggle" class="fa-solid fa-bars"></i>
+    <i class="fa-solid fa-scale-balanced"></i> LegalHelpDesk
+  </div>
+  <nav>
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+  </nav>
+</header>
+
+<main>
+  <!-- Sidebar -->
+  <div id="historySidebar" class="collapsed">
+    <h3>History</h3>
+    <div id="historyList">No previous queries.</div>
+  </div>
+
+  <!-- Content -->
+  <div id="contentArea">
+    <section class="question-section" id="questionSection">
+      <div class="question-header">
+        <h2><i class="fa-solid fa-circle-question"></i> Ask a Legal Question</h2>
+        <i id="questionToggle" class="fa-solid fa-chevron-down"></i>
+      </div>
+      <form id="questionForm">
+        <input type="text" id="questionInput" placeholder="Enter your question..." required>
+        <button type="submit"><i class="fa-solid fa-paper-plane"></i> Submit</button>
+      </form>
+    </section>
+
+    <section class="answer-section">
+      <div class="card" id="summaryCard">
+        <h3>Summary</h3>
+        <div class="content" id="summaryContent">Your summary will appear here...</div>
+      </div>
+      <div class="card" id="suggestionCard">
+        <h3>AI Suggestion</h3>
+        <div class="content suggestion" id="suggestionContent">AI suggestions will appear here...</div>
+        <div class="small-muted" id="disclaimer">Disclaimer info</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="loadingOverlay">
+  <i class="fas fa-circle-notch spinner"></i>
+  <div>Processing... <span id="timer">0.000s</span></div>
+</div>
+
+<footer>
+  <p>&copy; 2025 LegalHelpDesk | Constitutional Guidance</p>
+</footer>
+
+<script>
+const questionForm = document.getElementById("questionForm");
+const questionInput = document.getElementById("questionInput");
+const summaryCard = document.getElementById("summaryCard");
+const suggestionCard = document.getElementById("suggestionCard");
+const summaryContent = document.getElementById("summaryContent");
+const suggestionContent = document.getElementById("suggestionContent");
+const disclaimer = document.getElementById("disclaimer");
+const loadingOverlay = document.getElementById("loadingOverlay");
+const timerElem = document.getElementById("timer");
+const historyList = document.getElementById("historyList");
+const historySidebar = document.getElementById("historySidebar");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const questionSection = document.getElementById("questionSection");
+const questionToggle = document.getElementById("questionToggle");
+
+let timerInterval;
+
+// Decimal Timer Function
+function startDecimalTimer() {
+  let startTime = Date.now();
+  timerInterval = setInterval(()=>{
+    let elapsed = (Date.now() - startTime)/1000;
+    timerElem.textContent = elapsed.toFixed(3)+"s";
+  },1);
+}
+function stopDecimalTimer() { clearInterval(timerInterval); }
+
+// Escape HTML
+function escapeHtml(str){
+  if(!str) return "";
+  return str.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+// Convert AI suggestions to HTML lists
+function convertSuggestionToHTML(raw){
+  if(!raw) return "<p>No suggestion returned.</p>";
+  let txt = raw.replace(/\r/g,"").replace(/\n\s*\n+/g,"\n").trim();
+  let lines = txt.split("\n").map(l => l.trim());
+  let html = "<ol>";
+  let i=0;
+  while(i<lines.length){
+    let headerMatch = lines[i].match(/^(\d+)[\)\.]?\s*(.*)$/);
+    if(headerMatch){
+      let title = headerMatch[2]||("Step "+headerMatch[1]);
+      let liHtml = "<strong>"+escapeHtml(title)+"</strong>";
+      i++;
+      let bullets=[];
+      while(i<lines.length && !lines[i].match(/^(\d+)[\)\.]?\s*(.*)$/)){
+        let line = lines[i];
+        let bmatch = line.match(/^[-•]\s*(.*)$/);
+        if(bmatch) bullets.push(bmatch[1]);
+        else if(line.length>0) bullets.push(line);
+        i++;
+      }
+      if(bullets.length>0){ liHtml+="<ul>"; for(let b of bullets) liHtml+="<li>"+escapeHtml(b)+"</li>"; liHtml+="</ul>"; }
+      html+="<li>"+liHtml+"</li>";
+    }else{ html+="</ol>"; html+="<div class='small-muted'><p>"+escapeHtml(lines[i])+"</p></div>"; i++; html+="<ol>"; }
+  }
+  html+="</ol>"; html=html.replace(/<ol>\s*<\/ol>/g,""); return html;
+}
+
+// Add query to history
+function addToHistory(question){
+  let item = document.createElement("div");
+  item.className="history-item";
+  item.textContent=question;
+  item.onclick = ()=>{ questionInput.value = question; };
+  historyList.appendChild(item);
+}
+
+// Sidebar toggle
+sidebarToggle.addEventListener("click", ()=>{
+  historySidebar.classList.toggle("collapsed");
+});
+
+// Question section toggle
+questionToggle.addEventListener("click", ()=>{
+  questionSection.classList.toggle("collapsed");
+});
+
+// Form submit
+questionForm.addEventListener("submit", async function(e){
+  e.preventDefault();
+  let userQuestion = questionInput.value.trim();
+  if(!userQuestion){ alert("Please enter a question."); return; }
+
+  summaryContent.innerHTML = suggestionContent.innerHTML = disclaimer.innerHTML = "";
+  summaryCard.classList.remove("show");
+  suggestionCard.classList.remove("show");
+
+  loadingOverlay.style.display="flex";
+  startDecimalTimer();
+
+  try{
+    const res = await fetch("http://127.0.0.1:8000/analyze-case",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({user_text:userQuestion, language:"hinglish"})
+    });
+    const data = await res.json();
+    stopDecimalTimer();
+    loadingOverlay.style.display="none";
+
+    summaryContent.innerHTML = (data.summary||"").split("\n").map(escapeHtml).join("<br>");
+    suggestionContent.innerHTML = convertSuggestionToHTML(data.suggestion||"");
+    disclaimer.innerHTML = "<b>Disclaimer:</b> "+escapeHtml(data.disclaimer||"");
+
+    summaryCard.classList.add("show");
+    suggestionCard.classList.add("show");
+
+    addToHistory(userQuestion);
+    questionForm.reset();
+  }catch(err){
+    console.error(err);
+    stopDecimalTimer();
+    loadingOverlay.style.display="none";
+    summaryContent.innerHTML = "<p>Error fetching AI response. Try again later.</p>";
+  }
+});
+</script>
+</body>
+</html>
