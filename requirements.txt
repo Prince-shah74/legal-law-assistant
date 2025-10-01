@@ -2,3 +2,4 @@ Flask==2.3.3
 pandas
 uvicorn
 gunicorn
+fastapi==0.111.2
