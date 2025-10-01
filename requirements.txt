@@ -6,5 +6,5 @@ openai==0.27.8             # OpenAI API client
 gunicorn==23.0.0           # Production server (optional if deploying)
 aiofiles==23.2.1           # Needed if you serve static files with FastAPI
 jinja2==3.1.2              # Optional, for HTML templating if needed
-httpx==1.6.2               # Async HTTP client (FastAPI may use internally)
+httpx==1.37.1               # Async HTTP client (FastAPI may use internally)
 
