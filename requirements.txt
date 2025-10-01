@@ -1,2 +1,3 @@
 Flask==2.3.4
 pandas
+uvicorn
