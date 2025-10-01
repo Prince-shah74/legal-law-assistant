@@ -1,11 +1,9 @@
-fastapi==0.118.0           # Backend framework
-uvicorn==0.22.0            # ASGI server for FastAPI
-pandas==2.3.3              # CSV handling and data processing
-python-dotenv==1.0.1       # Load .env files (API keys)
-openai==0.27.8             # OpenAI API client
-gunicorn==23.0.0           # Production server (optional if deploying)
-aiofiles==23.2.1           # Needed if you serve static files with FastAPI
-jinja2==3.1.2              # Optional, for HTML templating if needed
-httpx
-               # Async HTTP client (FastAPI may use internally)
-
+fastapi==0.118.0
+uvicorn==0.22.0
+pandas==2.3.3
+python-dotenv==1.0.1
+openai==0.27.8
+gunicorn==23.0.0
+aiofiles==23.2.1
+jinja2==3.1.2
+httpx==0.28.1
