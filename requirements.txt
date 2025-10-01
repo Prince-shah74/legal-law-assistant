@@ -1,5 +1,4 @@
-Flask==2.3.3
-pandas
-uvicorn
-gunicorn
-fastapi==0.111.2
+fastapi==0.118.0
+uvicorn==0.22.0
+pandas==2.3.3
+gunicorn==23.0.0
